@@ -60,8 +60,8 @@ ui_print " "
 ui_print "  5. 使用 APatch 及其分支版本时"
 ui_print "     可能存在兼容性问题，请留意"
 ui_print " "
-ui_print "  6. 天玑处理器设备的温控节点与骁龙存在差异"
-ui_print "     部分功能可能无法完全生效"
+ui_print "  6. 天玑处理器设备已适配（V1.1）"
+ui_print "     如仍有异常请反馈"
 ui_print " "
 ui_print "  7. 如遇异常，在模块管理器中关闭模块"
 ui_print "     重启即可完全恢复"
@@ -178,8 +178,8 @@ DEVICE_MODEL=$(printf '%s' "$DEVICE_MODEL" | tr -d '\n\r')
 cat > "$MODPATH/module.prop" <<PROP
 id=Vehemence
 name=星驰引擎_狂暴温控
-version=V1.0
-versionCode=10
+version=V1.1
+versionCode=11
 author=酷安@穆远星
 description=为${MARKET_NAME}(${DEVICE_MODEL})提供狂暴温控，通过伪装壳温度提升温控墙阈值，手动调节CPU/GPU/DDR的伪装值。
 updateJson=https://raw.githubusercontent.com/MuYuanXing/Vehemence/main/update.json
