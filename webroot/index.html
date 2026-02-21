@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="light">
+    <title>星驰引擎 · 狂暴温控</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-icon">
+                <svg viewBox="0 0 48 48" width="40" height="40">
+                    <defs>
+                        <linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3391ff"/>
+                            <stop offset="100%" style="stop-color:#0a59f7"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M24 4 L30 18 L44 18 L33 28 L37 42 L24 34 L11 42 L15 28 L4 18 L18 18 Z" fill="url(#hg)" opacity="0.9"/>
+                </svg>
+            </div>
+            <div class="header-text">
+                <h1>狂暴温控</h1>
+                <p class="subtitle">Vehemence Thermal Engine</p>
+            </div>
+        </header>
+
+        <div class="card" id="status-card">
+            <div class="card-header">
+                <span class="card-title">守护进程状态</span>
+                <span class="status-dot" id="status-dot"></span>
+            </div>
+            <div class="status-grid">
+                <div class="stat-item">
+                    <span class="stat-label">状态</span>
+                    <span class="stat-value" id="daemon-status">检测中…</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">轮次</span>
+                    <span class="stat-value" id="daemon-round">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">节点数</span>
+                    <span class="stat-value" id="daemon-nodes">-</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">挂载数</span>
+                    <span class="stat-value" id="daemon-mounts">-</span>
+                </div>
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-primary" id="btn-restart" onclick="restartDaemon()">重启守护进程</button>
+                <button class="btn btn-ghost" id="btn-refresh" onclick="refreshStatus()">刷新状态</button>
+            </div>
+        </div>
+
+        <div class="card-stack">
+            <div class="stack-header">
+                <span class="stack-title">温度伪装</span>
+                <span class="stack-subtitle">滑动调节目标温度</span>
+            </div>
+            <p class="stack-tip">通过伪装壳温度提升温控墙阈值，监测软件电池温度会显示为真实温度</p>
+
+            <div class="stack-card" id="batt-card">
+                <div class="stack-card-inner">
+                    <div class="temp-row">
+                        <div class="temp-label-group">
+                            <span class="temp-badge badge-batt">BAT</span>
+                            <span class="temp-name">电池温度</span>
+                        </div>
+                        <div class="temp-display">
+                            <span class="temp-value" id="batt-value">34</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" class="slider slider-batt" id="batt-slider"
+                               min="20" max="40" value="34" oninput="onSliderInput('batt', this.value)">
+                        <div class="slider-labels">
+                            <span>20°C</span>
+                            <span>40°C</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-save btn-save-batt" onclick="saveConfig('batt')">保存设置</button>
+                </div>
+            </div>
+
+            <div class="stack-card" id="cpu-card">
+                <div class="stack-card-inner">
+                    <div class="temp-row">
+                        <div class="temp-label-group">
+                            <span class="temp-badge badge-cpu">CPU</span>
+                            <span class="temp-name">处理器温度</span>
+                        </div>
+                        <div class="temp-display">
+                            <span class="temp-value" id="cpu-value">40</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" class="slider slider-cpu" id="cpu-slider"
+                               min="20" max="60" value="40" oninput="onSliderInput('cpu', this.value)">
+                        <div class="slider-labels">
+                            <span>20°C</span>
+                            <span>60°C</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-save btn-save-cpu" onclick="saveConfig('cpu')">保存设置</button>
+                </div>
+            </div>
+
+            <div class="stack-card" id="gpu-card">
+                <div class="stack-card-inner">
+                    <div class="temp-row">
+                        <div class="temp-label-group">
+                            <span class="temp-badge badge-gpu">GPU</span>
+                            <span class="temp-name">图形处理器</span>
+                        </div>
+                        <div class="temp-display">
+                            <span class="temp-value" id="gpu-value">40</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" class="slider slider-gpu" id="gpu-slider"
+                               min="20" max="60" value="40" oninput="onSliderInput('gpu', this.value)">
+                        <div class="slider-labels">
+                            <span>20°C</span>
+                            <span>60°C</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-save btn-save-gpu" onclick="saveConfig('gpu')">保存设置</button>
+                </div>
+            </div>
+
+            <div class="stack-card" id="ddr-card">
+                <div class="stack-card-inner">
+                    <div class="temp-row">
+                        <div class="temp-label-group">
+                            <span class="temp-badge badge-ddr">DDR</span>
+                            <span class="temp-name">内存温度</span>
+                        </div>
+                        <div class="temp-display">
+                            <span class="temp-value" id="ddr-value">40</span>
+                            <span class="temp-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="slider-group">
+                        <input type="range" class="slider slider-ddr" id="ddr-slider"
+                               min="20" max="55" value="40" oninput="onSliderInput('ddr', this.value)">
+                        <div class="slider-labels">
+                            <span>20°C</span>
+                            <span>55°C</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-save btn-save-ddr" onclick="saveConfig('ddr')">保存设置</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" id="nodes-card">
+            <div class="card-header">
+                <span class="card-title">已发现节点</span>
+                <button class="btn btn-sm" onclick="toggleNodes()">展开</button>
+            </div>
+            <div class="node-summary" id="node-summary">
+                <span class="node-tag tag-batt">BAT: <b id="n-batt">0</b></span>
+                <span class="node-tag tag-cpu">CPU: <b id="n-cpu">0</b></span>
+                <span class="node-tag tag-gpu">GPU: <b id="n-gpu">0</b></span>
+                <span class="node-tag tag-ddr">DDR: <b id="n-ddr">0</b></span>
+            </div>
+            <div class="node-list collapsed" id="node-list"></div>
+        </div>
+
+        <div class="card" id="log-card">
+            <div class="card-header">
+                <span class="card-title">服务日志</span>
+                <div class="card-header-actions">
+                    <button class="btn btn-sm btn-danger-sm" id="btn-log-clear" onclick="clearLog()">清除</button>
+                    <button class="btn btn-sm" id="btn-log" onclick="toggleLog()">加载</button>
+                </div>
+            </div>
+            <div class="log-viewer collapsed" id="log-viewer"></div>
+        </div>
+
+        <footer class="footer">
+            <p>星驰引擎 · 狂暴温控 V1.0</p>
+            <p class="footer-sub">Yuanxing Stellar / MuYuanXing</p>
+        </footer>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="core.js"></script>
+</body>
+</html>
