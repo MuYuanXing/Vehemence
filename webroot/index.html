@@ -56,6 +56,17 @@
             </div>
         </div>
 
+        <div class="card" id="horae-card">
+            <div class="card-header">
+                <span class="card-title">系统温控压制</span>
+                <label class="toggle">
+                    <input type="checkbox" id="horae-toggle" checked onchange="toggleHorae(this.checked)">
+                    <span class="toggle-track"></span>
+                </label>
+            </div>
+            <p class="horae-desc" id="horae-desc">压制 Horae、thermal-engine 等系统温控服务，防止与温度伪装冲突</p>
+        </div>
+
         <div class="card-stack">
             <div class="stack-header">
                 <span class="stack-title">温度伪装</span>

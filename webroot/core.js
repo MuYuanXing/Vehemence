@@ -8,7 +8,8 @@
         batt_temp_mc: 34000,
         cpu_temp_mc: 40000,
         gpu_temp_mc: 40000,
-        ddr_temp_mc: 40000
+        ddr_temp_mc: 40000,
+        horae_stop: 1
     };
 
     function ksuExec(cmd) {
@@ -61,8 +62,10 @@
         var cpu = String(Math.floor(configValues.cpu_temp_mc));
         var gpu = String(Math.floor(configValues.gpu_temp_mc));
         var ddr = String(Math.floor(configValues.ddr_temp_mc));
+        var horae = String(configValues.horae_stop);
         var cmd = "printf '%s\\n' 'batt_temp_mc=" + batt + "' 'cpu_temp_mc=" + cpu +
-                  "' 'gpu_temp_mc=" + gpu + "' 'ddr_temp_mc=" + ddr + "' > " + path;
+                  "' 'gpu_temp_mc=" + gpu + "' 'ddr_temp_mc=" + ddr +
+                  "' 'horae_stop=" + horae + "' > " + path;
         return ksuExec(cmd);
     }
 
@@ -113,6 +116,12 @@
                 slider.value = deg;
                 if (display) display.textContent = deg;
             });
+
+            var horaeToggle = document.getElementById("horae-toggle");
+            if (horaeToggle) {
+                horaeToggle.checked = (configValues.horae_stop !== 0);
+                updateHoraeDesc(horaeToggle.checked);
+            }
         });
     }
 
@@ -153,6 +162,39 @@
             if (btn) {
                 btn.disabled = false;
                 btn.textContent = "\u4fdd\u5b58\u8bbe\u7f6e";
+            }
+        });
+    };
+
+    function updateHoraeDesc(enabled) {
+        var desc = document.getElementById("horae-desc");
+        if (!desc) return;
+        if (enabled) {
+            desc.textContent = "\u538b\u5236 Horae\u3001thermal-engine \u7b49\u7cfb\u7edf\u6e29\u63a7\u670d\u52a1\uff0c\u9632\u6b62\u4e0e\u6e29\u5ea6\u4f2a\u88c5\u51b2\u7a81";
+            desc.className = "horae-desc";
+        } else {
+            desc.textContent = "\u5df2\u5173\u95ed\uff0c\u7cfb\u7edf\u6e29\u63a7\u670d\u52a1\u5c06\u6b63\u5e38\u8fd0\u884c\uff0c\u53ef\u80fd\u5e72\u6270\u6e29\u5ea6\u4f2a\u88c5\u6548\u679c";
+            desc.className = "horae-desc warn";
+        }
+    }
+
+    window.toggleHorae = function (checked) {
+        configValues.horae_stop = checked ? 1 : 0;
+        updateHoraeDesc(checked);
+
+        writeConfigFile().then(function (r) {
+            if (r.errno === 0) {
+                ksudSet("horae_stop", String(configValues.horae_stop));
+                signalDaemon();
+                showToast(checked ? "\u7cfb\u7edf\u6e29\u63a7\u538b\u5236\u5df2\u5f00\u542f" : "\u7cfb\u7edf\u6e29\u63a7\u538b\u5236\u5df2\u5173\u95ed", "success");
+            } else {
+                showToast("\u4fdd\u5b58\u5931\u8d25: " + r.stderr, "error");
+                var toggle = document.getElementById("horae-toggle");
+                if (toggle) {
+                    configValues.horae_stop = checked ? 0 : 1;
+                    toggle.checked = !checked;
+                    updateHoraeDesc(!checked);
+                }
             }
         });
     };
