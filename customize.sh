@@ -2,6 +2,15 @@
 # shellcheck disable=SC2034
 SKIPUNZIP=1
 
+# Preserve user config on upgrade
+_v_state_backup=""
+if [ -d "$MODPATH/state" ]; then
+    _v_state_backup="/dev/mount_masks/_state_backup_$$"
+    mkdir -p "$_v_state_backup"
+    [ -f "$MODPATH/state/config.prop" ] && cp "$MODPATH/state/config.prop" "$_v_state_backup/"
+    [ -f "$MODPATH/state/apps.list" ] && cp "$MODPATH/state/apps.list" "$_v_state_backup/"
+fi
+
 unzip -o "$ZIPFILE" -d "$MODPATH" >&2 || abort "解压失败，安装取消"
 rm -rf "$MODPATH/META-INF"
 
@@ -12,6 +21,14 @@ set_perm_recursive "$MODPATH/odm" 0 0 0755 0644 u:object_r:vendor_configs_file:s
 set_perm_recursive "$MODPATH/system" 0 0 0755 0644 u:object_r:vendor_configs_file:s0
 set_perm_recursive "$MODPATH/bin" 0 0 0755 0755 u:object_r:system_file:s0
 [ -d "$MODPATH/webroot" ] && set_perm_recursive "$MODPATH/webroot" 0 0 0755 0644
+
+# Restore user config after extraction
+if [ -n "$_v_state_backup" ] && [ -d "$_v_state_backup" ]; then
+    mkdir -p "$MODPATH/state"
+    [ -f "$_v_state_backup/config.prop" ] && cp "$_v_state_backup/config.prop" "$MODPATH/state/"
+    [ -f "$_v_state_backup/apps.list" ] && cp "$_v_state_backup/apps.list" "$MODPATH/state/"
+    rm -rf "$_v_state_backup"
+fi
 
 mkdir -p /dev/mount_masks
 
@@ -123,6 +140,7 @@ fi
 
 if [ -f /sys/class/power_supply/battery/temp ]; then
     v=$(cat /sys/class/power_supply/battery/temp 2>/dev/null)
+    case "$v" in *[!0-9]*) v="" ;; esac
     if [ -n "$v" ]; then
         BAT_TEMP="$((v / 10))°C"
     fi
@@ -178,8 +196,8 @@ DEVICE_MODEL=$(printf '%s' "$DEVICE_MODEL" | tr -d '\n\r')
 cat > "$MODPATH/module.prop" <<PROP
 id=Vehemence
 name=星驰引擎_狂暴温控
-version=V1.1
-versionCode=11
+version=V1.2
+versionCode=12
 author=酷安@穆远星
 description=为${MARKET_NAME}(${DEVICE_MODEL})提供狂暴温控，通过伪装壳温度提升温控墙阈值，手动调节CPU/GPU/DDR的伪装值。
 updateJson=https://raw.githubusercontent.com/MuYuanXing/Vehemence/main/update.json

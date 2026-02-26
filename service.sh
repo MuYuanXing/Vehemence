@@ -3,6 +3,7 @@
 MODDIR=${0%/*}
 BIN="$MODDIR/bin/Vehemence"
 PIDFILE="$MODDIR/state/Vehemence.pid"
+WDPIDFILE="$MODDIR/state/watchdog.pid"
 STARTLOG="$MODDIR/state/startup.log"
 
 [ -x "$BIN" ] || exit 0
@@ -36,6 +37,7 @@ sleep 3
 
 mkdir -p /dev/mount_masks
 chmod 0755 /dev/mount_masks
+chcon u:object_r:tmpfs:s0 /dev/mount_masks 2>/dev/null
 
 if [ -f "$MODDIR/state/battery_mounts.list" ]; then
     while IFS= read -r node; do
@@ -46,6 +48,8 @@ if [ -f "$MODDIR/state/battery_mounts.list" ]; then
     rm -f "$MODDIR/state/battery_mounts.list"
 fi
 rm -f /dev/mount_masks/btmp_*
+
+# ── Start daemon ──
 
 start_once() {
     "$BIN" --start --moddir "$MODDIR" >> "$STARTLOG" 2>&1 &
@@ -74,3 +78,26 @@ if [ "$attempt" -gt "$max_attempts" ]; then
     rm -f "$PIDFILE"
     printf '%s daemon_start_failed\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$STARTLOG"
 fi
+
+# ── Daemon watchdog ──
+
+(
+    exec 0</dev/null
+    while true; do
+        sleep 120
+        dpid=$(cat "$PIDFILE" 2>/dev/null)
+        case "$dpid" in ''|*[!0-9]*) continue ;; esac
+
+        if ! kill -0 "$dpid" 2>/dev/null; then
+            printf '%s watchdog_restart_daemon\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$STARTLOG"
+            if start_once; then
+                printf '%s watchdog_daemon_restarted pid=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$(cat "$PIDFILE" 2>/dev/null)" >> "$STARTLOG"
+            else
+                printf '%s watchdog_restart_failed\n' "$(date '+%Y-%m-%d %H:%M:%S')" >> "$STARTLOG"
+            fi
+        fi
+    done
+) &
+WDPID=$!
+echo "$WDPID" > "$WDPIDFILE"
+printf '%s watchdog_started pid=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$WDPID" >> "$STARTLOG"
